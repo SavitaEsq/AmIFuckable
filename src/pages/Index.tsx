@@ -16,7 +16,7 @@ const Index = () => {
   const [lastUpdated, setLastUpdated] = useState("January 15, 2026 at 9:42 AM EST");
 
   const legalIdentity = {
-    legalName: "Your Devoted Son",
+    legalName: "Bhomick Morales",
     dateOfBirth: "03/15/1998",
     maturityDate: "03/15/2016",
     registrationDate: "01/01/2025",
