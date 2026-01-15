@@ -2,87 +2,87 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* AmIFuckable.gov - Official Federal Design System */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Federal color palette */
+    --background: 0 0% 98%;
+    --foreground: 215 35% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 215 35% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 215 35% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Navy blue primary */
+    --primary: 215 55% 25%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Light gray secondary */
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 215 35% 15%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 210 15% 93%;
+    --muted-foreground: 215 15% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 210 25% 90%;
+    --accent-foreground: 215 55% 25%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 50%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 210 20% 85%;
+    --input: 210 20% 85%;
+    --ring: 215 55% 25%;
 
-    --radius: 0.5rem;
+    --radius: 0.25rem;
+
+    /* Custom federal tokens */
+    --federal-navy: 215 55% 25%;
+    --federal-navy-dark: 215 60% 18%;
+    --federal-silver: 210 15% 70%;
+    --federal-gold: 43 70% 50%;
+    
+    /* Status colors - vivid */
+    --status-available: 120 100% 50%;
+    --status-unavailable: 0 100% 50%;
+    
+    /* Section styling */
+    --section-border: 210 20% 82%;
+    --section-header-bg: 210 25% 96%;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
+    --background: 215 35% 10%;
+    --foreground: 210 20% 95%;
+    --card: 215 35% 12%;
+    --card-foreground: 210 20% 95%;
+    --popover: 215 35% 12%;
+    --popover-foreground: 210 20% 95%;
+    --primary: 210 40% 70%;
+    --primary-foreground: 215 35% 10%;
+    --secondary: 215 30% 20%;
+    --secondary-foreground: 210 20% 95%;
+    --muted: 215 30% 18%;
+    --muted-foreground: 210 15% 60%;
+    --accent: 215 30% 22%;
+    --accent-foreground: 210 20% 95%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 215 30% 25%;
+    --input: 215 30% 25%;
+    --ring: 210 40% 70%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -100,6 +100,96 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+}
+
+@layer components {
+  /* Federal header bar */
+  .federal-header {
+    @apply bg-primary text-primary-foreground py-2 px-4;
+  }
+
+  /* Official section card */
+  .section-card {
+    @apply bg-card border border-border rounded-sm shadow-sm;
+  }
+
+  .section-header {
+    @apply bg-accent/50 border-b border-border px-4 py-3 font-semibold text-sm uppercase tracking-wide text-primary;
+  }
+
+  .section-body {
+    @apply p-4 md:p-6;
+  }
+
+  /* Status indicators */
+  .status-available {
+    color: hsl(var(--status-available));
+    text-shadow: 0 0 20px hsl(var(--status-available) / 0.5);
+  }
+
+  .status-unavailable {
+    color: hsl(var(--status-unavailable));
+    text-shadow: 0 0 20px hsl(var(--status-unavailable) / 0.5);
+  }
+
+  .status-badge-available {
+    @apply inline-flex items-center justify-center px-6 py-2 rounded-full text-sm font-bold uppercase tracking-wider;
+    background: hsl(var(--status-available) / 0.15);
+    border: 2px solid hsl(var(--status-available));
+    color: hsl(120 80% 35%);
+  }
+
+  .status-badge-unavailable {
+    @apply inline-flex items-center justify-center px-6 py-2 rounded-full text-sm font-bold uppercase tracking-wider;
+    background: hsl(var(--status-unavailable) / 0.15);
+    border: 2px solid hsl(var(--status-unavailable));
+    color: hsl(0 80% 40%);
+  }
+
+  /* Federal form elements */
+  .federal-input {
+    @apply w-full px-3 py-2 border border-border rounded-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary;
+  }
+
+  .federal-button {
+    @apply inline-flex items-center justify-center px-4 py-2 bg-primary text-primary-foreground font-medium rounded-sm hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+  }
+
+  .federal-button-secondary {
+    @apply inline-flex items-center justify-center px-4 py-2 bg-secondary text-secondary-foreground font-medium rounded-sm border border-border hover:bg-accent transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+  }
+
+  /* Verification badge */
+  .verified-badge {
+    @apply inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full;
+    background: hsl(120 60% 90%);
+    color: hsl(120 60% 30%);
+  }
+
+  /* Data display */
+  .data-label {
+    @apply text-xs font-medium uppercase tracking-wide text-muted-foreground mb-1;
+  }
+
+  .data-value {
+    @apply text-foreground font-medium;
+  }
+
+  /* Toggle switch styling */
+  .federal-toggle {
+    @apply relative inline-flex h-6 w-11 items-center rounded-full transition-colors;
+  }
+
+  /* Legal notice */
+  .legal-notice {
+    @apply text-xs text-muted-foreground leading-relaxed;
+  }
+
+  /* Tooltip styling */
+  .federal-tooltip {
+    @apply text-xs bg-primary text-primary-foreground px-3 py-2 rounded shadow-lg max-w-xs;
   }
 }
