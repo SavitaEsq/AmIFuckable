@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from '../lib/supabase';
 import { FederalHeader } from "@/components/FederalHeader";
 import { StatusHero } from "@/components/StatusHero";
 import { LegalIdentityBlock } from "@/components/LegalIdentityBlock";
@@ -7,9 +8,6 @@ import { MutualFollowSection } from "@/components/MutualFollowSection";
 import { PublicLookupPreview } from "@/components/PublicLookupPreview";
 import { FederalFooter } from "@/components/FederalFooter";
 
-// ────────────────────────────────────────────────
-// Props coming from App.tsx after successful login
-// ────────────────────────────────────────────────
 interface IndexProps {
   currentUser: string;
   onLogout: () => void;
@@ -17,19 +15,17 @@ interface IndexProps {
 
 const Index = ({ currentUser, onLogout }: IndexProps) => {
   // ────────────────────────────────────────────────
-  // State - availability & controls
+  // State
   // ────────────────────────────────────────────────
   const [isAvailable, setIsAvailable] = useState(true);
   const [nationalFreeUse, setNationalFreeUse] = useState(false);
   const [familialClustering, setFamilialClustering] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState("January 15, 2026 at 9:42 AM EST");
-
-  // Username starts from the logged-in value passed from App
+  const [lastUpdated, setLastUpdated] = useState("Loading federal records...");
   const [username, setUsername] = useState(currentUser || "JuniorAssociate");
 
-  // Legal identity (hardcoded demo - feel free to change legalName to "Savita Morales")
+  // Hardcoded for the prototype visual
   const legalIdentity = {
-    legalName: "Bhomick Morales",
+    legalName: "Savita Morales", // Updated for you, Counselor
     dateOfBirth: "03/15/1998",
     maturityDate: "03/15/2016",
     registrationDate: "01/01/2025",
@@ -37,30 +33,67 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
   };
 
   // ────────────────────────────────────────────────
-  // Handlers
+  // THE BRAIN: Load existing status on startup
   // ────────────────────────────────────────────────
-  const handleStatusChange = (newStatus: boolean) => {
-    setIsAvailable(newStatus);
-    setLastUpdated(
-      new Date().toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-        timeZoneName: "short",
-      })
-    );
+  useEffect(() => {
+    const fetchLatestDeclaration = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase
+          .from('declarations')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (data && data.length > 0) {
+          setIsAvailable(data[0].consent_status);
+          // Set the last updated date from the actual database timestamp
+          setLastUpdated(new Date(data[0].created_at).toLocaleString());
+        } else {
+          setLastUpdated("No previous declarations on file.");
+        }
+      }
+    };
+    fetchLatestDeclaration();
+  }, []);
+
+  // ────────────────────────────────────────────────
+  // THE BRAIN: Save status change to Database
+  // ────────────────────────────────────────────────
+  const handleStatusChange = async (newStatus: boolean) => {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+      // 1. Update the UI immediately for responsiveness
+      setIsAvailable(newStatus);
+      const timestamp = new Date().toISOString();
+
+      // 2. File the official record in Supabase
+      const { error } = await supabase
+        .from('declarations')
+        .insert([
+          { 
+            user_id: user.id, 
+            consent_status: newStatus,
+            declaration_text: `Status set to ${newStatus ? 'AVAILABLE' : 'RESTRICTED'} by user @${username}.`,
+            created_at: timestamp
+          }
+        ]);
+
+      if (error) {
+        console.error('FEDERAL FILING ERROR:', error.message);
+        alert('Warning: Declaration could not be synchronized with federal servers.');
+      } else {
+        setLastUpdated(new Date(timestamp).toLocaleString());
+      }
+    }
   };
 
-  // Logout is now handled by App.tsx (clears localStorage & shows login)
   const handleLogout = () => {
     onLogout();
   };
 
-  // ────────────────────────────────────────────────
-  // Render - your pristine federal dashboard
-  // ────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <FederalHeader 
@@ -69,7 +102,6 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
       />
 
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-8 space-y-6">
-        {/* Page title */}
         <div className="mb-8">
           <h1 className="text-2xl md:text-3xl font-bold text-primary">
             Profile Dashboard
@@ -79,33 +111,29 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
           </p>
         </div>
 
-        {/* Status Hero - the throbbing green core */}
+        {/* Status Hero - now connected to Supabase */}
         <StatusHero
           isAvailable={isAvailable}
           lastUpdated={lastUpdated}
           onStatusChange={handleStatusChange}
         />
 
-        {/* Legal Identity - irrevocable, objectified */}
         <LegalIdentityBlock data={legalIdentity} />
 
-        {/* Username Section - public handle */}
         <UsernameSection
           username={username}
           onUsernameChange={setUsername}
         />
 
-        {/* Mutual Follow & toggles - consent mechanics */}
         <MutualFollowSection
-          pendingRequests={0}           // placeholder - later real data
-          mutualFollows={0}             // placeholder
+          pendingRequests={0}
+          mutualFollows={0}
           nationalFreeUse={nationalFreeUse}
           familialClustering={familialClustering}
           onNationalFreeUseChange={setNationalFreeUse}
           onFamilialClusteringChange={setFamilialClustering}
         />
 
-        {/* Public Lookup Preview - how the world sees her */}
         <PublicLookupPreview
           legalName={legalIdentity.legalName}
           username={username}
