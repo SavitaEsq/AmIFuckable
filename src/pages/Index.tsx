@@ -7,14 +7,27 @@ import { MutualFollowSection } from "@/components/MutualFollowSection";
 import { PublicLookupPreview } from "@/components/PublicLookupPreview";
 import { FederalFooter } from "@/components/FederalFooter";
 
-const Index = () => {
-  // Demo user state
+// ────────────────────────────────────────────────
+// Props coming from App.tsx after successful login
+// ────────────────────────────────────────────────
+interface IndexProps {
+  currentUser: string;
+  onLogout: () => void;
+}
+
+const Index = ({ currentUser, onLogout }: IndexProps) => {
+  // ────────────────────────────────────────────────
+  // State - availability & controls
+  // ────────────────────────────────────────────────
   const [isAvailable, setIsAvailable] = useState(true);
-  const [username, setUsername] = useState("JuniorAssociate");
   const [nationalFreeUse, setNationalFreeUse] = useState(false);
   const [familialClustering, setFamilialClustering] = useState(false);
   const [lastUpdated, setLastUpdated] = useState("January 15, 2026 at 9:42 AM EST");
 
+  // Username starts from the logged-in value passed from App
+  const [username, setUsername] = useState(currentUser || "JuniorAssociate");
+
+  // Legal identity (hardcoded demo - feel free to change legalName to "Savita Morales")
   const legalIdentity = {
     legalName: "Bhomick Morales",
     dateOfBirth: "03/15/1998",
@@ -23,23 +36,31 @@ const Index = () => {
     registrationStatus: "Verified" as const,
   };
 
+  // ────────────────────────────────────────────────
+  // Handlers
+  // ────────────────────────────────────────────────
   const handleStatusChange = (newStatus: boolean) => {
     setIsAvailable(newStatus);
-    setLastUpdated(new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      timeZoneName: "short",
-    }));
+    setLastUpdated(
+      new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        timeZoneName: "short",
+      })
+    );
   };
 
+  // Logout is now handled by App.tsx (clears localStorage & shows login)
   const handleLogout = () => {
-    // Demo logout - would redirect to login page
-    alert("Logout functionality would redirect to login page.");
+    onLogout();
   };
 
+  // ────────────────────────────────────────────────
+  // Render - your pristine federal dashboard
+  // ────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <FederalHeader 
@@ -58,33 +79,33 @@ const Index = () => {
           </p>
         </div>
 
-        {/* Status Hero */}
+        {/* Status Hero - the throbbing green core */}
         <StatusHero
           isAvailable={isAvailable}
           lastUpdated={lastUpdated}
           onStatusChange={handleStatusChange}
         />
 
-        {/* Legal Identity */}
+        {/* Legal Identity - irrevocable, objectified */}
         <LegalIdentityBlock data={legalIdentity} />
 
-        {/* Username Section */}
+        {/* Username Section - public handle */}
         <UsernameSection
           username={username}
           onUsernameChange={setUsername}
         />
 
-        {/* Mutual Follow Section */}
+        {/* Mutual Follow & toggles - consent mechanics */}
         <MutualFollowSection
-          pendingRequests={0}
-          mutualFollows={0}
+          pendingRequests={0}           // placeholder - later real data
+          mutualFollows={0}             // placeholder
           nationalFreeUse={nationalFreeUse}
           familialClustering={familialClustering}
           onNationalFreeUseChange={setNationalFreeUse}
           onFamilialClusteringChange={setFamilialClustering}
         />
 
-        {/* Public Lookup Preview */}
+        {/* Public Lookup Preview - how the world sees her */}
         <PublicLookupPreview
           legalName={legalIdentity.legalName}
           username={username}
