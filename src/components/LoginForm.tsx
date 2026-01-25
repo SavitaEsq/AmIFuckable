@@ -6,7 +6,6 @@ interface LoginFormProps {
 }
 
 export default function LoginForm({ onLogin }: LoginFormProps) {
-  // Use 'username' instead of 'email' for the modern registry feel
   const [usernameInput, setUsernameInput] = useState(''); 
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,10 +14,8 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
     e.preventDefault();
     setLoading(true);
 
-    // 1. Strip the '@' if they typed it
+    // Strip '@' and mask as federal email
     const cleanUsername = usernameInput.startsWith('@') ? usernameInput.slice(1) : usernameInput;
-    
-    // 2. Add the internal federal domain used in our SQL injection
     const internalEmail = `${cleanUsername.toLowerCase()}@fed.registry.gov`;
 
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -27,7 +24,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
     });
 
     if (error) {
-      alert('CREDENTIAL VERIFICATION FAILED: Identity not found in federal records.');
+      alert('AUTHORIZATION DENIED: Identity not found in federal records.');
       setLoading(false);
     } else {
       sessionStorage.setItem('currentUser', cleanUsername);
@@ -38,41 +35,30 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md border border-gray-200">
-        <h1 className="text-3xl font-bold text-center mb-2 text-blue-900">
-          AmIFuckable.gov
-        </h1>
-        <p className="text-center text-gray-600 mb-8">
-          Secure Identity Declaration
-        </p>
+        <h1 className="text-3xl font-bold text-center mb-2 text-blue-900">AmIFuckable.gov</h1>
+        <p className="text-center text-gray-600 mb-8">Secure Identity Declaration</p>
 
         <form onSubmit={handleSubmit} autoComplete="off">
           <div className="mb-6">
-            <label className="block text-gray-700 font-medium mb-2">
-              Registry Username
-            </label>
+            <label className="block text-gray-700 font-medium mb-2">Registry Username</label>
             <input
-              type="text"
+              type="text" // FIXED: Changed from 'email' to 'text' to prevent browser validation errors
               value={usernameInput}
               onChange={(e) => setUsernameInput(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="@SavitaEsq"
+              placeholder="@ChiefJustice"
               required
-              name="federal-username-field"
             />
           </div>
 
           <div className="mb-8">
-            <label className="block text-gray-700 font-medium mb-2">
-              Secure Passphrase
-            </label>
+            <label className="block text-gray-700 font-medium mb-2">Secure Passphrase</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
-              autoComplete="current-password"
-              name="federal-password-field"
             />
           </div>
 
@@ -84,10 +70,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
             {loading ? 'Verifying Credentials...' : 'Authenticate Session'}
           </button>
         </form>
-
-        <p className="text-center text-sm text-gray-500 mt-6 font-mono">
-          OFFLINE REGISTRATION ONLY. VISIT DISTRICT OFFICE FOR NEW SSN CLEARANCE.
-        </p>
+        <p className="text-center text-sm text-gray-500 mt-6">Irrevocable upon submission.</p>
       </div>
     </div>
   );
