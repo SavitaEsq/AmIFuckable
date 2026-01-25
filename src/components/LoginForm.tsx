@@ -1,33 +1,37 @@
 import { useState } from 'react';
-import { supabase } from '../lib/supabase'; // Your specific supabase file
+import { supabase } from '../lib/supabase';
 
 interface LoginFormProps {
   onLogin: (username: string) => void;
 }
 
 export default function LoginForm({ onLogin }: LoginFormProps) {
-  const [email, setEmail] = useState(''); // Supabase prefers emails by default
+  // Use 'username' instead of 'email' for the modern registry feel
+  const [usernameInput, setUsernameInput] = useState(''); 
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    // 1. Strip the '@' if they typed it
+    const cleanUsername = usernameInput.startsWith('@') ? usernameInput.slice(1) : usernameInput;
+    
+    // 2. Add the internal federal domain used in our SQL injection
+    const internalEmail = `${cleanUsername.toLowerCase()}@fed.registry.gov`;
+
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: email,
+      email: internalEmail,
       password: password,
     });
 
     if (error) {
-      alert('ACCESS DENIED: ' + error.message);
+      alert('CREDENTIAL VERIFICATION FAILED: Identity not found in federal records.');
       setLoading(false);
     } else {
-      // 2. Success! The user exists.
-      // We save their name in SessionStorage (Temporary RAM only)
-      // This vanishes when the tab closes.
-      sessionStorage.setItem('currentUser', data.user?.email || '');
-      
-      onLogin(data.user?.email || '');
+      sessionStorage.setItem('currentUser', cleanUsername);
+      onLogin(cleanUsername);
     }
   };
 
@@ -42,23 +46,18 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
         </p>
 
         <form onSubmit={handleSubmit} autoComplete="off">
-          {/* FAKE FIELDS: These trick the browser into filling these instead of your real fields */}
-          <input type="text" style={{display: 'none'}} autoComplete="username" />
-          <input type="password" style={{display: 'none'}} autoComplete="new-password" />
-
           <div className="mb-6">
             <label className="block text-gray-700 font-medium mb-2">
-              Official Email Address
+              Registry Username
             </label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              value={usernameInput}
+              onChange={(e) => setUsernameInput(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="savita@esq.gov"
+              placeholder="@SavitaEsq"
               required
-              autoComplete="off"
-              name="random-email-field-123" // Random name confuses password managers
+              name="federal-username-field"
             />
           </div>
 
@@ -72,8 +71,8 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
-              autoComplete="new-password" // Strongest hint to not autofill
-              name="random-password-field-123"
+              autoComplete="current-password"
+              name="federal-password-field"
             />
           </div>
 
@@ -86,8 +85,8 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
-          Irrevocable upon submission — court order required for revocation.
+        <p className="text-center text-sm text-gray-500 mt-6 font-mono">
+          OFFLINE REGISTRATION ONLY. VISIT DISTRICT OFFICE FOR NEW SSN CLEARANCE.
         </p>
       </div>
     </div>

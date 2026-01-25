@@ -14,104 +14,117 @@ interface IndexProps {
 }
 
 const Index = ({ currentUser, onLogout }: IndexProps) => {
-  // ────────────────────────────────────────────────
-  // State
-  // ────────────────────────────────────────────────
+  // State for Consent Status
   const [isAvailable, setIsAvailable] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState("Loading federal records...");
+  
+  // State for Dynamic Identity
+  const [username, setUsername] = useState(currentUser);
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [legalIdentity, setLegalIdentity] = useState({
+    legalName: "Fetching Identity...",
+    dateOfBirth: "--/--/----",
+    registrationDate: "--/--/----",
+    registrationStatus: "Verifying" as const,
+  });
+
+  // State for Social/Clustering
   const [nationalFreeUse, setNationalFreeUse] = useState(false);
   const [familialClustering, setFamilialClustering] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState("Loading federal records...");
-  const [username, setUsername] = useState(currentUser || "JuniorAssociate");
-
-  // Hardcoded for the prototype visual
-  const legalIdentity = {
-    legalName: "Savita Morales", // Updated for you, Counselor
-    dateOfBirth: "03/15/1998",
-    maturityDate: "03/15/2016",
-    registrationDate: "01/01/2025",
-    registrationStatus: "Verified" as const,
-  };
 
   // ────────────────────────────────────────────────
-  // THE BRAIN: Load existing status on startup
+  // THE BRAIN: Load ALL user data on startup
   // ────────────────────────────────────────────────
   useEffect(() => {
-    const fetchLatestDeclaration = async () => {
+    const loadFullFederalRecord = async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      
       if (user) {
-        const { data } = await supabase
+        // 1. Fetch the unique Legal Identity (Profiles Table)
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (profile) {
+          setLegalIdentity({
+            legalName: profile.legal_name,
+            dateOfBirth: new Date(profile.date_of_birth).toLocaleDateString(),
+            registrationDate: new Date(profile.registration_date).toLocaleDateString(),
+            registrationStatus: "Verified" as const,
+          });
+          setUsername(profile.username);
+          setAvatarUrl(profile.avatar_url);
+        }
+
+        // 2. Fetch the latest sexual availability declaration
+        const { data: declarations } = await supabase
           .from('declarations')
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
           .limit(1);
 
-        if (data && data.length > 0) {
-          setIsAvailable(data[0].consent_status);
-          // Set the last updated date from the actual database timestamp
-          setLastUpdated(new Date(data[0].created_at).toLocaleString());
+        if (declarations && declarations.length > 0) {
+          setIsAvailable(declarations[0].consent_status);
+          setLastUpdated(new Date(declarations[0].created_at).toLocaleString());
         } else {
           setLastUpdated("No previous declarations on file.");
         }
       }
     };
-    fetchLatestDeclaration();
-  }, []);
+    loadFullFederalRecord();
+  }, [currentUser]);
 
   // ────────────────────────────────────────────────
-  // THE BRAIN: Save status change to Database
+  // THE BRAIN: File a New Declaration
   // ────────────────────────────────────────────────
   const handleStatusChange = async (newStatus: boolean) => {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (user) {
-      // 1. Update the UI immediately for responsiveness
       setIsAvailable(newStatus);
       const timestamp = new Date().toISOString();
 
-      // 2. File the official record in Supabase
       const { error } = await supabase
         .from('declarations')
         .insert([
           { 
             user_id: user.id, 
             consent_status: newStatus,
-            declaration_text: `Status set to ${newStatus ? 'AVAILABLE' : 'RESTRICTED'} by user @${username}.`,
+            declaration_text: `Status set to ${newStatus ? 'AVAILABLE' : 'RESTRICTED'} by subject @${username}.`,
             created_at: timestamp
           }
         ]);
 
       if (error) {
-        console.error('FEDERAL FILING ERROR:', error.message);
-        alert('Warning: Declaration could not be synchronized with federal servers.');
+        alert('FEDERAL FILING ERROR: Synchronization failed.');
       } else {
         setLastUpdated(new Date(timestamp).toLocaleString());
       }
     }
   };
 
-  const handleLogout = () => {
-    onLogout();
-  };
-
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <FederalHeader 
         username={`@${username}`} 
-        onLogout={handleLogout} 
+        avatarUrl={avatarUrl} // Pass the DiceBear avatar to the header
+        onLogout={onLogout} 
       />
 
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-8 space-y-6">
-        <div className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-primary">
-            Profile Dashboard
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your federal sexual availability registration
-          </p>
+        <div className="flex items-center space-x-4 mb-8">
+           {avatarUrl && (
+             <img src={avatarUrl} alt="Subject Face Scan" className="w-16 h-16 rounded-full border-2 border-primary shadow-md" />
+           )}
+           <div>
+             <h1 className="text-2xl md:text-3xl font-bold text-primary">Registry Dashboard</h1>
+             <p className="text-muted-foreground">Official Identity Management</p>
+           </div>
         </div>
 
-        {/* Status Hero - now connected to Supabase */}
         <StatusHero
           isAvailable={isAvailable}
           lastUpdated={lastUpdated}
@@ -122,7 +135,7 @@ const Index = ({ currentUser, onLogout }: IndexProps) => {
 
         <UsernameSection
           username={username}
-          onUsernameChange={setUsername}
+          onUsernameChange={setUsername} // For visual updates
         />
 
         <MutualFollowSection
